@@ -3,20 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Office management control system API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: staff
+  - name: clients
+  - name: tasks
+  - name: attendance
+  - name: work-logs
+  - name: invoices
+  - name: notifications
+  - name: dashboard
+  - name: reports
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +32,1051 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ---------- Auth ----------
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out current session
+      responses:
+        "204":
+          description: Logged out
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+
+  # ---------- Staff ----------
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List staff members
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Staff" }
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Create a staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateStaffBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Staff" }
+  /staff/{id}:
+    get:
+      operationId: getStaff
+      tags: [staff]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Staff
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Staff" }
+    patch:
+      operationId: updateStaff
+      tags: [staff]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateStaffBody" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Staff" }
+    delete:
+      operationId: deleteStaff
+      tags: [staff]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ---------- Clients ----------
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      parameters:
+        - in: query
+          name: search
+          schema: { type: string }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [active, inactive, prospect]
+      responses:
+        "200":
+          description: Clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Client" }
+    post:
+      operationId: createClient
+      tags: [clients]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateClientBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateClientBody" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Client" }
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ---------- Tasks ----------
+  /tasks:
+    get:
+      operationId: listTasks
+      tags: [tasks]
+      parameters:
+        - in: query
+          name: assigneeId
+          schema: { type: integer }
+        - in: query
+          name: clientId
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [todo, in_progress, in_review, done]
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Task" }
+    post:
+      operationId: createTask
+      tags: [tasks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateTaskBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Task" }
+  /tasks/{id}:
+    get:
+      operationId: getTask
+      tags: [tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Task
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Task" }
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateTaskBody" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Task" }
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ---------- Attendance ----------
+  /attendance:
+    get:
+      operationId: listAttendance
+      tags: [attendance]
+      parameters:
+        - in: query
+          name: staffId
+          schema: { type: integer }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Attendance entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AttendanceEntry" }
+  /attendance/check-in:
+    post:
+      operationId: checkIn
+      tags: [attendance]
+      summary: Check in current user
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckInBody" }
+      responses:
+        "200":
+          description: Checked in
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttendanceEntry" }
+  /attendance/check-out:
+    post:
+      operationId: checkOut
+      tags: [attendance]
+      summary: Check out current user
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckOutBody" }
+      responses:
+        "200":
+          description: Checked out
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AttendanceEntry" }
+  /attendance/today:
+    get:
+      operationId: getTodayAttendance
+      tags: [attendance]
+      summary: Today's attendance status for current user
+      responses:
+        "200":
+          description: Today entry (or null)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/AttendanceEntry"
+                  - type: "null"
+
+  # ---------- Work Logs ----------
+  /work-logs:
+    get:
+      operationId: listWorkLogs
+      tags: [work-logs]
+      parameters:
+        - in: query
+          name: staffId
+          schema: { type: integer }
+        - in: query
+          name: taskId
+          schema: { type: integer }
+        - in: query
+          name: from
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Work logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WorkLog" }
+    post:
+      operationId: createWorkLog
+      tags: [work-logs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateWorkLogBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkLog" }
+  /work-logs/{id}:
+    patch:
+      operationId: updateWorkLog
+      tags: [work-logs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWorkLogBody" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkLog" }
+    delete:
+      operationId: deleteWorkLog
+      tags: [work-logs]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ---------- Invoices ----------
+  /invoices:
+    get:
+      operationId: listInvoices
+      tags: [invoices]
+      parameters:
+        - in: query
+          name: clientId
+          schema: { type: integer }
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [draft, sent, paid, overdue, cancelled]
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Invoice" }
+    post:
+      operationId: createInvoice
+      tags: [invoices]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateInvoiceBody" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+  /invoices/{id}:
+    get:
+      operationId: getInvoice
+      tags: [invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Invoice
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+    patch:
+      operationId: updateInvoice
+      tags: [invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateInvoiceBody" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+    delete:
+      operationId: deleteInvoice
+      tags: [invoices]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  # ---------- Notifications ----------
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      parameters:
+        - in: query
+          name: unreadOnly
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Notifications for current user
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+  /notifications/{id}/read:
+    post:
+      operationId: markNotificationRead
+      tags: [notifications]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Marked
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Notification" }
+  /notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      responses:
+        "204":
+          description: Marked
+
+  # ---------- Dashboard (wow) ----------
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: High-level KPIs
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DashboardSummary" }
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Recent activity feed
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ActivityItem" }
+  /dashboard/upcoming-tasks:
+    get:
+      operationId: getUpcomingTasks
+      tags: [dashboard]
+      summary: Upcoming tasks (next 7 days)
+      responses:
+        "200":
+          description: Upcoming tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Task" }
+
+  # ---------- Reports ----------
+  /reports/task-status:
+    get:
+      operationId: getTaskStatusReport
+      tags: [reports]
+      summary: Tasks grouped by status
+      responses:
+        "200":
+          description: Status counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StatusCount" }
+  /reports/revenue:
+    get:
+      operationId: getRevenueReport
+      tags: [reports]
+      summary: Monthly revenue (last 6 months)
+      responses:
+        "200":
+          description: Monthly revenue
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/MonthlyRevenue" }
+  /reports/staff-performance:
+    get:
+      operationId: getStaffPerformance
+      tags: [reports]
+      summary: Tasks completed per staff member
+      responses:
+        "200":
+          description: Performance items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/StaffPerformance" }
+  /reports/attendance-summary:
+    get:
+      operationId: getAttendanceSummary
+      tags: [reports]
+      summary: Attendance summary for last 7 days
+      responses:
+        "200":
+          description: Daily attendance counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DailyAttendance" }
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
+        status: { type: string }
+
+    LoginBody:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    AuthUser:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+        role:
+          type: string
+          enum: [admin, staff]
+        position: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        department: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+
+    Staff:
+      type: object
+      required: [id, email, name, role, status, createdAt]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+        role:
+          type: string
+          enum: [admin, staff]
         status:
           type: string
-      required:
-        - status
+          enum: [active, inactive]
+        position: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        department: { type: string, nullable: true }
+        avatarUrl: { type: string, nullable: true }
+        joinedAt: { type: string, nullable: true, format: date }
+        createdAt: { type: string, format: date-time }
 
+    CreateStaffBody:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email: { type: string, format: email }
+        name: { type: string, minLength: 1 }
+        role:
+          type: string
+          enum: [admin, staff]
+        password: { type: string, minLength: 6 }
+        position: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        department: { type: string, nullable: true }
+        joinedAt: { type: string, nullable: true, format: date }
+
+    UpdateStaffBody:
+      type: object
+      properties:
+        name: { type: string }
+        role:
+          type: string
+          enum: [admin, staff]
+        status:
+          type: string
+          enum: [active, inactive]
+        position: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        department: { type: string, nullable: true }
+        password: { type: string, minLength: 6, nullable: true }
+
+    Client:
+      type: object
+      required: [id, name, status, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        company: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [active, inactive, prospect]
+        notes: { type: string, nullable: true }
+        contactPerson: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    CreateClientBody:
+      type: object
+      required: [name, status]
+      properties:
+        name: { type: string, minLength: 1 }
+        company: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [active, inactive, prospect]
+        notes: { type: string, nullable: true }
+        contactPerson: { type: string, nullable: true }
+
+    UpdateClientBody:
+      type: object
+      properties:
+        name: { type: string }
+        company: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [active, inactive, prospect]
+        notes: { type: string, nullable: true }
+        contactPerson: { type: string, nullable: true }
+
+    Task:
+      type: object
+      required: [id, title, status, priority, createdAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [todo, in_progress, in_review, done]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigneeId: { type: integer, nullable: true }
+        assigneeName: { type: string, nullable: true }
+        clientId: { type: integer, nullable: true }
+        clientName: { type: string, nullable: true }
+        dueDate: { type: string, nullable: true, format: date }
+        createdById: { type: integer, nullable: true }
+        createdAt: { type: string, format: date-time }
+        completedAt: { type: string, nullable: true, format: date-time }
+
+    CreateTaskBody:
+      type: object
+      required: [title, status, priority]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [todo, in_progress, in_review, done]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigneeId: { type: integer, nullable: true }
+        clientId: { type: integer, nullable: true }
+        dueDate: { type: string, nullable: true, format: date }
+
+    UpdateTaskBody:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string, nullable: true }
+        status:
+          type: string
+          enum: [todo, in_progress, in_review, done]
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+        assigneeId: { type: integer, nullable: true }
+        clientId: { type: integer, nullable: true }
+        dueDate: { type: string, nullable: true, format: date }
+
+    AttendanceEntry:
+      type: object
+      required: [id, staffId, staffName, date, status]
+      properties:
+        id: { type: integer }
+        staffId: { type: integer }
+        staffName: { type: string }
+        date: { type: string, format: date }
+        checkIn: { type: string, nullable: true, format: date-time }
+        checkOut: { type: string, nullable: true, format: date-time }
+        status:
+          type: string
+          enum: [present, absent, late, on_leave]
+        notes: { type: string, nullable: true }
+        hoursWorked: { type: number, nullable: true }
+
+    CheckInBody:
+      type: object
+      properties:
+        notes: { type: string, nullable: true }
+
+    CheckOutBody:
+      type: object
+      properties:
+        notes: { type: string, nullable: true }
+
+    WorkLog:
+      type: object
+      required: [id, staffId, staffName, date, summary, createdAt]
+      properties:
+        id: { type: integer }
+        staffId: { type: integer }
+        staffName: { type: string }
+        taskId: { type: integer, nullable: true }
+        taskTitle: { type: string, nullable: true }
+        date: { type: string, format: date }
+        summary: { type: string }
+        hours: { type: number, nullable: true }
+        status:
+          type: string
+          enum: [in_progress, blocked, completed]
+        createdAt: { type: string, format: date-time }
+
+    CreateWorkLogBody:
+      type: object
+      required: [date, summary, status]
+      properties:
+        taskId: { type: integer, nullable: true }
+        date: { type: string, format: date }
+        summary: { type: string, minLength: 1 }
+        hours: { type: number, nullable: true }
+        status:
+          type: string
+          enum: [in_progress, blocked, completed]
+
+    UpdateWorkLogBody:
+      type: object
+      properties:
+        taskId: { type: integer, nullable: true }
+        date: { type: string, format: date }
+        summary: { type: string }
+        hours: { type: number, nullable: true }
+        status:
+          type: string
+          enum: [in_progress, blocked, completed]
+
+    InvoiceItem:
+      type: object
+      required: [description, quantity, unitPrice]
+      properties:
+        description: { type: string }
+        quantity: { type: number }
+        unitPrice: { type: number }
+
+    Invoice:
+      type: object
+      required: [id, invoiceNumber, clientId, clientName, status, total, issueDate, createdAt]
+      properties:
+        id: { type: integer }
+        invoiceNumber: { type: string }
+        clientId: { type: integer }
+        clientName: { type: string }
+        status:
+          type: string
+          enum: [draft, sent, paid, overdue, cancelled]
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/InvoiceItem" }
+        subtotal: { type: number }
+        tax: { type: number }
+        total: { type: number }
+        issueDate: { type: string, format: date }
+        dueDate: { type: string, nullable: true, format: date }
+        paidAt: { type: string, nullable: true, format: date-time }
+        notes: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    CreateInvoiceBody:
+      type: object
+      required: [clientId, items, issueDate, status]
+      properties:
+        clientId: { type: integer }
+        status:
+          type: string
+          enum: [draft, sent, paid, overdue, cancelled]
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/InvoiceItem" }
+        tax: { type: number, nullable: true }
+        issueDate: { type: string, format: date }
+        dueDate: { type: string, nullable: true, format: date }
+        notes: { type: string, nullable: true }
+
+    UpdateInvoiceBody:
+      type: object
+      properties:
+        clientId: { type: integer }
+        status:
+          type: string
+          enum: [draft, sent, paid, overdue, cancelled]
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/InvoiceItem" }
+        tax: { type: number, nullable: true }
+        issueDate: { type: string, format: date }
+        dueDate: { type: string, nullable: true, format: date }
+        notes: { type: string, nullable: true }
+
+    Notification:
+      type: object
+      required: [id, userId, title, message, type, read, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        type:
+          type: string
+          enum: [task, invoice, attendance, system, reminder]
+        read: { type: boolean }
+        link: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    DashboardSummary:
+      type: object
+      required:
+        - activeStaff
+        - totalClients
+        - openTasks
+        - overdueTasks
+        - tasksDueToday
+        - pendingInvoices
+        - revenueThisMonth
+        - presentToday
+        - unreadNotifications
+      properties:
+        activeStaff: { type: integer }
+        totalClients: { type: integer }
+        openTasks: { type: integer }
+        overdueTasks: { type: integer }
+        tasksDueToday: { type: integer }
+        pendingInvoices: { type: integer }
+        revenueThisMonth: { type: number }
+        presentToday: { type: integer }
+        unreadNotifications: { type: integer }
+
+    ActivityItem:
+      type: object
+      required: [id, type, title, message, createdAt]
+      properties:
+        id: { type: string }
+        type:
+          type: string
+          enum: [task_created, task_completed, work_log, invoice_paid, invoice_created, attendance, client_added, staff_added]
+        title: { type: string }
+        message: { type: string }
+        actorName: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    StatusCount:
+      type: object
+      required: [status, count]
+      properties:
+        status: { type: string }
+        count: { type: integer }
+
+    MonthlyRevenue:
+      type: object
+      required: [month, revenue, invoiced]
+      properties:
+        month: { type: string }
+        revenue: { type: number }
+        invoiced: { type: number }
+
+    StaffPerformance:
+      type: object
+      required: [staffId, staffName, tasksCompleted, tasksInProgress, hoursLogged]
+      properties:
+        staffId: { type: integer }
+        staffName: { type: string }
+        tasksCompleted: { type: integer }
+        tasksInProgress: { type: integer }
+        hoursLogged: { type: number }
+
+    DailyAttendance:
+      type: object
+      required: [date, present, absent, late]
+      properties:
+        date: { type: string, format: date }
+        present: { type: integer }
+        absent: { type: integer }
+        late: { type: integer }
