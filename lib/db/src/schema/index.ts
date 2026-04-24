@@ -6,3 +6,4 @@ export * from "./attendance";
 export * from "./workLogs";
 export * from "./invoices";
 export * from "./notifications";
+export * from "./firmProfile";

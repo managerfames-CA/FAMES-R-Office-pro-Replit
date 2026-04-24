@@ -9,12 +9,14 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 import Login from "@/pages/login";
+import ChangePassword from "@/pages/changePassword";
 import Dashboard from "@/pages/dashboard";
 import Staff from "@/pages/staff";
 import Clients from "@/pages/clients";
 import Tasks from "@/pages/tasks";
 import Attendance from "@/pages/attendance";
 import WorkLogs from "@/pages/workLogs";
+import PendingApprovals from "@/pages/pendingApprovals";
 import Invoices from "@/pages/invoices";
 import InvoiceDetail from "@/pages/invoiceDetail";
 import Reports from "@/pages/reports";
@@ -35,6 +37,7 @@ function ProtectedRoutes() {
           <Route path="/tasks" component={Tasks} />
           <Route path="/attendance" component={Attendance} />
           <Route path="/work-logs" component={WorkLogs} />
+          <Route path="/pending-approvals" component={PendingApprovals} />
           <Route path="/invoices" component={Invoices} />
           <Route path="/invoices/:id" component={InvoiceDetail} />
           <Route path="/reports" component={Reports} />
@@ -47,10 +50,19 @@ function ProtectedRoutes() {
   );
 }
 
+function ChangePasswordRoute() {
+  return (
+    <ProtectedRoute>
+      <ChangePassword />
+    </ProtectedRoute>
+  );
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/change-password" component={ChangePasswordRoute} />
       <Route component={ProtectedRoutes} />
     </Switch>
   );

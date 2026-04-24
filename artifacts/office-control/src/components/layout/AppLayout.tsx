@@ -1,23 +1,23 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { useAuth, useLogoutAction } from "@/hooks/use-auth";
-import { useListNotifications } from "@workspace/api-client-react";
-import { 
-  Building2, 
-  LayoutDashboard, 
-  CheckSquare, 
-  Clock, 
-  CalendarDays, 
-  Users, 
-  FileText, 
-  BarChart3, 
-  UserSquare2, 
-  Bell, 
+import { useEffect } from "react";
+import { Link, useLocation, Redirect } from "wouter";
+import { useAuth, useLogoutAction, type PermissionKey } from "@/hooks/use-auth";
+import { useFirmBranding } from "@/hooks/use-firm-branding";
+import { FirmLogo } from "@/components/FirmLogo";
+import { useListNotifications, useListPendingWorkLogs, getListPendingWorkLogsQueryKey } from "@workspace/api-client-react";
+import {
+  LayoutDashboard,
+  CheckSquare,
+  Clock,
+  CalendarDays,
+  Users,
+  FileText,
+  BarChart3,
+  UserSquare2,
+  Bell,
   Settings,
   LogOut,
-  Search,
-  Menu,
-  ChevronDown
+  ChevronDown,
+  Inbox,
 } from "lucide-react";
 
 import {
@@ -33,10 +33,8 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,61 +46,92 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
-const adminNavItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Tasks", url: "/tasks", icon: CheckSquare },
-  { title: "Work Logs", url: "/work-logs", icon: Clock },
-  { title: "Attendance", url: "/attendance", icon: CalendarDays },
-  { title: "Clients", url: "/clients", icon: Users },
-  { title: "Invoices", url: "/invoices", icon: FileText },
-  { title: "Reports", url: "/reports", icon: BarChart3 },
-  { title: "Staff", url: "/staff", icon: UserSquare2 },
-  { title: "Notifications", url: "/notifications", icon: Bell },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
+type NavItem = {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permission?: PermissionKey;
+  adminOnly?: boolean;
+  badge?: number;
+};
 
-const staffNavItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Tasks", url: "/tasks", icon: CheckSquare },
-  { title: "Work Logs", url: "/work-logs", icon: Clock },
-  { title: "Attendance", url: "/attendance", icon: CalendarDays },
-  { title: "Clients", url: "/clients", icon: Users },
-  { title: "Invoices", url: "/invoices", icon: FileText },
-  { title: "Notifications", url: "/notifications", icon: Bell },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
+function buildNav(opts: {
+  isAdmin: boolean;
+  can: (p: PermissionKey) => boolean;
+  pendingCount: number;
+}): { primary: NavItem[]; admin: NavItem[] } {
+  const { isAdmin, can, pendingCount } = opts;
 
-function AppSidebar() {
+  const primary: NavItem[] = [
+    { title: "Dashboard", url: "/", icon: LayoutDashboard },
+    { title: "My Tasks", url: "/tasks", icon: CheckSquare },
+    { title: "Attendance", url: "/attendance", icon: CalendarDays },
+    { title: "Work Logs", url: "/work-logs", icon: Clock },
+    { title: "Notifications", url: "/notifications", icon: Bell },
+  ];
+
+  const admin: NavItem[] = [];
+  if (isAdmin) {
+    admin.push(
+      { title: "Pending Approvals", url: "/pending-approvals", icon: Inbox, badge: pendingCount },
+      { title: "Staff", url: "/staff", icon: UserSquare2 },
+    );
+  }
+  if (isAdmin || can("manage_clients")) {
+    admin.push({ title: "Clients", url: "/clients", icon: Users });
+  }
+  if (isAdmin || can("view_invoices") || can("manage_invoices")) {
+    admin.push({ title: "Invoices", url: "/invoices", icon: FileText });
+  }
+  if (isAdmin || can("view_reports")) {
+    admin.push({ title: "Reports", url: "/reports", icon: BarChart3 });
+  }
+  admin.push({ title: "Settings", url: "/settings", icon: Settings });
+
+  return { primary, admin };
+}
+
+function AppSidebar({ pendingCount }: { pendingCount: number }) {
   const [location] = useLocation();
-  const { user, isAdmin } = useAuth();
-  const navItems = isAdmin ? adminNavItems : staffNavItems;
+  const { user, isAdmin, can } = useAuth();
+  const { name: firmName, tagline, logoUrl } = useFirmBranding();
+  const { primary, admin } = buildNav({ isAdmin, can, pendingCount });
 
   return (
     <Sidebar>
       <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2 font-semibold text-sidebar-primary-foreground bg-sidebar-primary p-2 rounded-md">
-          <Building2 className="h-6 w-6" />
-          <span className="text-lg">Office Control</span>
+        <div className="flex items-center gap-3 p-2 rounded-md">
+          <FirmLogo name={firmName} logoUrl={logoUrl} size="md" />
+          <div className="overflow-hidden">
+            <div className="text-sm font-semibold truncate">{firmName}</div>
+            <div className="text-[11px] text-muted-foreground truncate">{tagline}</div>
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>{isAdmin ? "Workspace" : "My Day"}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location === item.url || (item.url !== "/" && location.startsWith(item.url))}>
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {primary.map((item) => (
+                <NavLink key={item.title} item={item} location={location} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {admin.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>{isAdmin ? "Oversight" : "Tools"}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {admin.map((item) => (
+                  <NavLink key={item.title} item={item} location={location} />
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3 overflow-hidden rounded-md bg-sidebar-accent p-2">
@@ -112,7 +141,9 @@ function AppSidebar() {
           </Avatar>
           <div className="flex flex-col overflow-hidden">
             <span className="truncate text-sm font-medium">{user?.name}</span>
-            <span className="truncate text-xs text-muted-foreground">{user?.email}</span>
+            <span className="truncate text-xs text-muted-foreground">
+              {user?.role === "admin" ? "Administrator" : user?.position || "Team member"}
+            </span>
           </div>
         </div>
       </SidebarFooter>
@@ -120,20 +151,41 @@ function AppSidebar() {
   );
 }
 
-function Topbar() {
-  const { user } = useAuth();
+function NavLink({ item, location }: { item: NavItem; location: string }) {
+  const isActive = location === item.url || (item.url !== "/" && location.startsWith(item.url));
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive}>
+        <Link href={item.url}>
+          <item.icon className="h-4 w-4" />
+          <span className="flex-1">{item.title}</span>
+          {item.badge != null && item.badge > 0 && (
+            <Badge variant="secondary" className="ml-auto h-5 px-1.5 text-[10px] bg-amber-100 text-amber-700">
+              {item.badge}
+            </Badge>
+          )}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+function Topbar({ pendingCount }: { pendingCount: number }) {
+  const { user, isAdmin } = useAuth();
   const logout = useLogoutAction();
   const [location] = useLocation();
-  
-  const { data: notifications } = useListNotifications({ unreadOnly: true });
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
-  // Derive page title from location
+  const { data: notifications } = useListNotifications({ unreadOnly: true });
+  const unreadCount = notifications?.filter((n) => !n.read).length || 0;
+
   const getPageTitle = () => {
-    if (location === "/") return "Dashboard";
+    if (location === "/") return isAdmin ? "Control Center" : "My Day";
     const path = location.split("/")[1];
     if (!path) return "Dashboard";
-    return path.charAt(0).toUpperCase() + path.slice(1).replace("-", " ");
+    return path
+      .split("-")
+      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+      .join(" ");
   };
 
   return (
@@ -143,16 +195,16 @@ function Topbar() {
         <h1 className="text-xl font-semibold tracking-tight hidden md:block">
           {getPageTitle()}
         </h1>
-        <div className="ml-auto flex items-center space-x-4">
-          <div className="relative hidden sm:block w-64">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search..."
-              className="w-full bg-muted/50 pl-9 border-muted focus-visible:bg-background"
-            />
-          </div>
-          
+        <div className="ml-auto flex items-center space-x-3">
+          {isAdmin && pendingCount > 0 && (
+            <Button variant="outline" size="sm" asChild className="hidden sm:flex bg-amber-50 border-amber-200 text-amber-800 hover:bg-amber-100">
+              <Link href="/pending-approvals">
+                <Inbox className="h-4 w-4 mr-1.5" />
+                {pendingCount} to review
+              </Link>
+            </Button>
+          )}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative rounded-full">
@@ -168,7 +220,7 @@ function Topbar() {
               <DropdownMenuSeparator />
               {notifications && notifications.length > 0 ? (
                 <div className="max-h-[300px] overflow-y-auto">
-                  {notifications.slice(0, 5).map(n => (
+                  {notifications.slice(0, 5).map((n) => (
                     <DropdownMenuItem key={n.id} className="flex flex-col items-start p-3 cursor-pointer" asChild>
                       <Link href={n.link || "/notifications"}>
                         <div className="font-medium text-sm">{n.title}</div>
@@ -218,8 +270,16 @@ function Topbar() {
                   <span>Settings</span>
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/change-password" className="w-full cursor-pointer flex items-center">
+                  <span className="ml-6">Change password</span>
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+              <DropdownMenuItem
+                onClick={logout}
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>
@@ -232,16 +292,36 @@ function Topbar() {
 }
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isAdmin, mustChangePassword } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  const { data: pending } = useListPendingWorkLogs({
+    query: {
+      queryKey: getListPendingWorkLogsQueryKey(),
+      enabled: isAdmin,
+      refetchInterval: 60_000,
+    },
+  });
+  const pendingCount = pending?.length ?? 0;
+
+  useEffect(() => {
+    if (mustChangePassword && location !== "/change-password") {
+      setLocation("/change-password");
+    }
+  }, [mustChangePassword, location, setLocation]);
+
+  if (mustChangePassword && location !== "/change-password") {
+    return <Redirect to="/change-password" />;
+  }
+
   return (
     <SidebarProvider>
       <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr]">
-        <AppSidebar />
+        <AppSidebar pendingCount={pendingCount} />
         <div className="flex flex-col h-screen overflow-hidden">
-          <Topbar />
+          <Topbar pendingCount={pendingCount} />
           <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6 lg:p-8">
-            <div className="mx-auto max-w-6xl w-full">
-              {children}
-            </div>
+            <div className="mx-auto max-w-6xl w-full">{children}</div>
           </main>
         </div>
       </div>

@@ -55,6 +55,8 @@ router.post("/staff", requireAdmin, async (req: AuthedRequest, res: Response) =>
       phone: data.phone ?? null,
       department: data.department ?? null,
       joinedAt: data.joinedAt ? data.joinedAt.toISOString().slice(0, 10) : null,
+      permissions: data.permissions ?? [],
+      mustChangePassword: data.mustChangePassword ?? true,
     })
     .returning();
   res.status(201).json(serializeStaff(inserted[0]!));
@@ -98,10 +100,17 @@ router.patch("/staff/:id", requireAuth, async (req: AuthedRequest, res: Response
   if (data.position !== undefined) update.position = data.position;
   if (data.phone !== undefined) update.phone = data.phone;
   if (data.department !== undefined) update.department = data.department;
-  if (data.password) update.passwordHash = hashPassword(data.password);
+  if (data.password) {
+    update.passwordHash = hashPassword(data.password);
+    if (!isSelf) {
+      update.mustChangePassword = true;
+    }
+  }
   if (isAdmin) {
     if (data.role !== undefined) update.role = data.role;
     if (data.status !== undefined) update.status = data.status;
+    if (data.permissions !== undefined) update.permissions = data.permissions;
+    if (data.mustChangePassword !== undefined) update.mustChangePassword = data.mustChangePassword;
   }
   const updated = await db
     .update(usersTable)

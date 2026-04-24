@@ -31,6 +31,17 @@ export const LoginResponse = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
 });
 
 /**
@@ -45,6 +56,51 @@ export const GetCurrentUserResponse = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
+});
+
+/**
+ * @summary Change current user password
+ */
+export const changePasswordBodyCurrentPasswordMin = 6;
+
+export const changePasswordBodyNewPasswordMin = 6;
+
+export const ChangePasswordBody = zod.object({
+  currentPassword: zod.string().min(changePasswordBodyCurrentPasswordMin),
+  newPassword: zod.string().min(changePasswordBodyNewPasswordMin),
+});
+
+export const ChangePasswordResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  name: zod.string(),
+  role: zod.enum(["admin", "staff"]),
+  position: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  department: zod.string().nullish(),
+  avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
 });
 
 /**
@@ -65,6 +121,17 @@ export const ListStaffResponseItem = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
   joinedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
@@ -85,6 +152,19 @@ export const CreateStaffBody = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   joinedAt: zod.coerce.date().nullish(),
+  permissions: zod
+    .array(
+      zod.enum([
+        "view_reports",
+        "view_invoices",
+        "manage_invoices",
+        "manage_clients",
+        "view_team_attendance",
+        "view_team_work_logs",
+      ]),
+    )
+    .optional(),
+  mustChangePassword: zod.boolean().optional(),
 });
 
 export const GetStaffParams = zod.object({
@@ -101,6 +181,17 @@ export const GetStaffResponse = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
   joinedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
@@ -119,6 +210,19 @@ export const UpdateStaffBody = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   password: zod.string().min(updateStaffBodyPasswordMin).nullish(),
+  permissions: zod
+    .array(
+      zod.enum([
+        "view_reports",
+        "view_invoices",
+        "manage_invoices",
+        "manage_clients",
+        "view_team_attendance",
+        "view_team_work_logs",
+      ]),
+    )
+    .optional(),
+  mustChangePassword: zod.boolean().optional(),
 });
 
 export const UpdateStaffResponse = zod.object({
@@ -131,6 +235,17 @@ export const UpdateStaffResponse = zod.object({
   phone: zod.string().nullish(),
   department: zod.string().nullish(),
   avatarUrl: zod.string().nullish(),
+  permissions: zod.array(
+    zod.enum([
+      "view_reports",
+      "view_invoices",
+      "manage_invoices",
+      "manage_clients",
+      "view_team_attendance",
+      "view_team_work_logs",
+    ]),
+  ),
+  mustChangePassword: zod.boolean(),
   joinedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
@@ -399,6 +514,11 @@ export const ListWorkLogsResponseItem = zod.object({
   summary: zod.string(),
   hours: zod.number().nullish(),
   status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  approvalStatus: zod.enum(["draft", "submitted", "approved", "rejected"]),
+  reviewNotes: zod.string().nullish(),
+  reviewedBy: zod.number().nullish(),
+  reviewerName: zod.string().nullish(),
+  reviewedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 export const ListWorkLogsResponse = zod.array(ListWorkLogsResponseItem);
@@ -409,6 +529,7 @@ export const CreateWorkLogBody = zod.object({
   summary: zod.string().min(1),
   hours: zod.number().nullish(),
   status: zod.enum(["in_progress", "blocked", "completed"]),
+  submitForReview: zod.boolean().optional(),
 });
 
 export const UpdateWorkLogParams = zod.object({
@@ -421,6 +542,7 @@ export const UpdateWorkLogBody = zod.object({
   summary: zod.string().optional(),
   hours: zod.number().nullish(),
   status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  submitForReview: zod.boolean().optional(),
 });
 
 export const UpdateWorkLogResponse = zod.object({
@@ -433,11 +555,98 @@ export const UpdateWorkLogResponse = zod.object({
   summary: zod.string(),
   hours: zod.number().nullish(),
   status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  approvalStatus: zod.enum(["draft", "submitted", "approved", "rejected"]),
+  reviewNotes: zod.string().nullish(),
+  reviewedBy: zod.number().nullish(),
+  reviewerName: zod.string().nullish(),
+  reviewedAt: zod.coerce.date().nullish(),
   createdAt: zod.coerce.date(),
 });
 
 export const DeleteWorkLogParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary List submitted work logs awaiting review (admin)
+ */
+export const ListPendingWorkLogsResponseItem = zod.object({
+  id: zod.number(),
+  staffId: zod.number(),
+  staffName: zod.string(),
+  taskId: zod.number().nullish(),
+  taskTitle: zod.string().nullish(),
+  date: zod.coerce.date(),
+  summary: zod.string(),
+  hours: zod.number().nullish(),
+  status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  approvalStatus: zod.enum(["draft", "submitted", "approved", "rejected"]),
+  reviewNotes: zod.string().nullish(),
+  reviewedBy: zod.number().nullish(),
+  reviewerName: zod.string().nullish(),
+  reviewedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+export const ListPendingWorkLogsResponse = zod.array(
+  ListPendingWorkLogsResponseItem,
+);
+
+/**
+ * @summary Approve a submitted work log (admin)
+ */
+export const ApproveWorkLogParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ApproveWorkLogBody = zod.object({
+  notes: zod.string().nullish(),
+});
+
+export const ApproveWorkLogResponse = zod.object({
+  id: zod.number(),
+  staffId: zod.number(),
+  staffName: zod.string(),
+  taskId: zod.number().nullish(),
+  taskTitle: zod.string().nullish(),
+  date: zod.coerce.date(),
+  summary: zod.string(),
+  hours: zod.number().nullish(),
+  status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  approvalStatus: zod.enum(["draft", "submitted", "approved", "rejected"]),
+  reviewNotes: zod.string().nullish(),
+  reviewedBy: zod.number().nullish(),
+  reviewerName: zod.string().nullish(),
+  reviewedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Reject a submitted work log (admin)
+ */
+export const RejectWorkLogParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RejectWorkLogBody = zod.object({
+  notes: zod.string().nullish(),
+});
+
+export const RejectWorkLogResponse = zod.object({
+  id: zod.number(),
+  staffId: zod.number(),
+  staffName: zod.string(),
+  taskId: zod.number().nullish(),
+  taskTitle: zod.string().nullish(),
+  date: zod.coerce.date(),
+  summary: zod.string(),
+  hours: zod.number().nullish(),
+  status: zod.enum(["in_progress", "blocked", "completed"]).optional(),
+  approvalStatus: zod.enum(["draft", "submitted", "approved", "rejected"]),
+  reviewNotes: zod.string().nullish(),
+  reviewedBy: zod.number().nullish(),
+  reviewerName: zod.string().nullish(),
+  reviewedAt: zod.coerce.date().nullish(),
+  createdAt: zod.coerce.date(),
 });
 
 export const ListInvoicesQueryParams = zod.object({
@@ -662,6 +871,49 @@ export const GetUpcomingTasksResponseItem = zod.object({
   completedAt: zod.coerce.date().nullish(),
 });
 export const GetUpcomingTasksResponse = zod.array(GetUpcomingTasksResponseItem);
+
+/**
+ * @summary Get the firm profile (branding)
+ */
+export const GetFirmProfileResponse = zod.object({
+  name: zod.string().nullish(),
+  tagline: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  address: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  updatedAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update firm profile (admin only)
+ */
+export const updateFirmProfileBodyNameMax = 255;
+
+export const updateFirmProfileBodyTaglineMax = 255;
+
+export const updateFirmProfileBodyPhoneMax = 64;
+
+export const updateFirmProfileBodyEmailMax = 255;
+
+export const UpdateFirmProfileBody = zod.object({
+  name: zod.string().max(updateFirmProfileBodyNameMax).nullish(),
+  tagline: zod.string().max(updateFirmProfileBodyTaglineMax).nullish(),
+  logoUrl: zod.string().nullish(),
+  address: zod.string().nullish(),
+  phone: zod.string().max(updateFirmProfileBodyPhoneMax).nullish(),
+  email: zod.string().max(updateFirmProfileBodyEmailMax).nullish(),
+});
+
+export const UpdateFirmProfileResponse = zod.object({
+  name: zod.string().nullish(),
+  tagline: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  address: zod.string().nullish(),
+  phone: zod.string().nullish(),
+  email: zod.string().nullish(),
+  updatedAt: zod.coerce.date(),
+});
 
 /**
  * @summary Tasks grouped by status

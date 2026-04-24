@@ -29,6 +29,8 @@ export function serializeAuthUser(u: UserRow) {
     phone: u.phone,
     department: u.department,
     avatarUrl: u.avatarUrl,
+    permissions: u.permissions ?? [],
+    mustChangePassword: u.mustChangePassword,
   };
 }
 
@@ -43,6 +45,8 @@ export function serializeStaff(u: UserRow) {
     phone: u.phone,
     department: u.department,
     avatarUrl: u.avatarUrl,
+    permissions: u.permissions ?? [],
+    mustChangePassword: u.mustChangePassword,
     joinedAt: dateStrOrNull(u.joinedAt),
     createdAt: u.createdAt.toISOString(),
   };
@@ -109,7 +113,7 @@ export function serializeAttendance(
 
 export function serializeWorkLog(
   w: WorkLogRow,
-  opts: { staffName: string; taskTitle?: string | null },
+  opts: { staffName: string; taskTitle?: string | null; reviewerName?: string | null },
 ) {
   return {
     id: w.id,
@@ -121,6 +125,11 @@ export function serializeWorkLog(
     summary: w.summary,
     hours: w.hours == null ? null : Number(w.hours),
     status: w.status,
+    approvalStatus: w.approvalStatus,
+    reviewNotes: w.reviewNotes,
+    reviewedBy: w.reviewedBy,
+    reviewerName: opts.reviewerName ?? null,
+    reviewedAt: isoOrNull(w.reviewedAt),
     createdAt: w.createdAt.toISOString(),
   };
 }

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CreateStaffBodyRole } from "./createStaffBodyRole";
+import type { PermissionKey } from "./permissionKey";
 
 export interface CreateStaffBody {
   email: string;
@@ -18,4 +19,6 @@ export interface CreateStaffBody {
   phone?: string | null;
   department?: string | null;
   joinedAt?: Date | null;
+  permissions?: PermissionKey[];
+  mustChangePassword?: boolean;
 }

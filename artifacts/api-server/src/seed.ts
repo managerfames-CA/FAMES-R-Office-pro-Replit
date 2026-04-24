@@ -7,6 +7,7 @@ import {
   workLogsTable,
   invoicesTable,
   notificationsTable,
+  firmProfileTable,
 } from "@workspace/db";
 import { hashPassword } from "./lib/auth";
 
@@ -16,6 +17,13 @@ async function main() {
     console.log("Database already seeded; skipping.");
     return;
   }
+
+  console.log("Seeding firm profile...");
+  await db.insert(firmProfileTable).values({
+    id: 1,
+    name: "FAMES & R Workspace",
+    tagline: "Manage • Collaborate • Grow",
+  });
 
   console.log("Seeding users...");
   const users = await db
@@ -42,6 +50,7 @@ async function main() {
         phone: "+1 (415) 555-0101",
         joinedAt: "2024-03-01",
         status: "active",
+        permissions: ["view_team_work_logs", "view_team_attendance", "manage_clients"],
       },
       {
         email: "morgan@office.app",
@@ -53,6 +62,7 @@ async function main() {
         phone: "+1 (415) 555-0102",
         joinedAt: "2024-05-12",
         status: "active",
+        permissions: ["view_invoices", "manage_clients"],
       },
       {
         email: "sam@office.app",
@@ -64,6 +74,7 @@ async function main() {
         phone: "+1 (415) 555-0103",
         joinedAt: "2024-09-20",
         status: "active",
+        mustChangePassword: true,
       },
       {
         email: "jamie@office.app",
@@ -260,6 +271,7 @@ async function main() {
       summary: "Prepped Northwind kickoff deck — sections 1 and 2.",
       hours: "3.5",
       status: "in_progress",
+      approvalStatus: "draft",
     },
     {
       staffId: morgan!.id,
@@ -268,6 +280,7 @@ async function main() {
       summary: "Confirmed Sunrise call agenda; circulated invites.",
       hours: "1.0",
       status: "completed",
+      approvalStatus: "submitted",
     },
     {
       staffId: sam!.id,
@@ -276,6 +289,7 @@ async function main() {
       summary: "Closed 12 Sunrise support tickets; escalated 1.",
       hours: "5.0",
       status: "completed",
+      approvalStatus: "submitted",
     },
     {
       staffId: jamie!.id,
@@ -284,6 +298,16 @@ async function main() {
       summary: "Drafted Pinecrest landing page copy revisions v1.",
       hours: "2.5",
       status: "in_progress",
+      approvalStatus: "draft",
+    },
+    {
+      staffId: jamie!.id,
+      taskId: null,
+      date: addDays(0),
+      summary: "Wrapped up Pinecrest copy revisions; ready for client review.",
+      hours: "4.0",
+      status: "completed",
+      approvalStatus: "submitted",
     },
   ]);
 

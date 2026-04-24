@@ -14,6 +14,17 @@ export interface LoginBody {
   password: string;
 }
 
+export type PermissionKey = (typeof PermissionKey)[keyof typeof PermissionKey];
+
+export const PermissionKey = {
+  view_reports: "view_reports",
+  view_invoices: "view_invoices",
+  manage_invoices: "manage_invoices",
+  manage_clients: "manage_clients",
+  view_team_attendance: "view_team_attendance",
+  view_team_work_logs: "view_team_work_logs",
+} as const;
+
 export type AuthUserRole = (typeof AuthUserRole)[keyof typeof AuthUserRole];
 
 export const AuthUserRole = {
@@ -30,6 +41,8 @@ export interface AuthUser {
   phone?: string | null;
   department?: string | null;
   avatarUrl?: string | null;
+  permissions: PermissionKey[];
+  mustChangePassword: boolean;
 }
 
 export type StaffRole = (typeof StaffRole)[keyof typeof StaffRole];
@@ -56,6 +69,8 @@ export interface Staff {
   phone?: string | null;
   department?: string | null;
   avatarUrl?: string | null;
+  permissions: PermissionKey[];
+  mustChangePassword: boolean;
   joinedAt?: string | null;
   createdAt: string;
 }
@@ -79,6 +94,8 @@ export interface CreateStaffBody {
   phone?: string | null;
   department?: string | null;
   joinedAt?: string | null;
+  permissions?: PermissionKey[];
+  mustChangePassword?: boolean;
 }
 
 export type UpdateStaffBodyRole =
@@ -106,6 +123,15 @@ export interface UpdateStaffBody {
   department?: string | null;
   /** @minLength 6 */
   password?: string | null;
+  permissions?: PermissionKey[];
+  mustChangePassword?: boolean;
+}
+
+export interface ChangePasswordBody {
+  /** @minLength 6 */
+  currentPassword: string;
+  /** @minLength 6 */
+  newPassword: string;
 }
 
 export type ClientStatus = (typeof ClientStatus)[keyof typeof ClientStatus];
@@ -295,6 +321,16 @@ export interface CheckOutBody {
   notes?: string | null;
 }
 
+export type ApprovalStatus =
+  (typeof ApprovalStatus)[keyof typeof ApprovalStatus];
+
+export const ApprovalStatus = {
+  draft: "draft",
+  submitted: "submitted",
+  approved: "approved",
+  rejected: "rejected",
+} as const;
+
 export type WorkLogStatus = (typeof WorkLogStatus)[keyof typeof WorkLogStatus];
 
 export const WorkLogStatus = {
@@ -313,6 +349,11 @@ export interface WorkLog {
   summary: string;
   hours?: number | null;
   status?: WorkLogStatus;
+  approvalStatus: ApprovalStatus;
+  reviewNotes?: string | null;
+  reviewedBy?: number | null;
+  reviewerName?: string | null;
+  reviewedAt?: string | null;
   createdAt: string;
 }
 
@@ -332,6 +373,7 @@ export interface CreateWorkLogBody {
   summary: string;
   hours?: number | null;
   status: CreateWorkLogBodyStatus;
+  submitForReview?: boolean;
 }
 
 export type UpdateWorkLogBodyStatus =
@@ -349,6 +391,11 @@ export interface UpdateWorkLogBody {
   summary?: string;
   hours?: number | null;
   status?: UpdateWorkLogBodyStatus;
+  submitForReview?: boolean;
+}
+
+export interface ReviewWorkLogBody {
+  notes?: string | null;
 }
 
 export interface InvoiceItem {
@@ -507,6 +554,29 @@ export interface DailyAttendance {
   present: number;
   absent: number;
   late: number;
+}
+
+export interface FirmProfile {
+  name?: string | null;
+  tagline?: string | null;
+  logoUrl?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  updatedAt: string;
+}
+
+export interface UpdateFirmProfileBody {
+  /** @maxLength 255 */
+  name?: string | null;
+  /** @maxLength 255 */
+  tagline?: string | null;
+  logoUrl?: string | null;
+  address?: string | null;
+  /** @maxLength 64 */
+  phone?: string | null;
+  /** @maxLength 255 */
+  email?: string | null;
 }
 
 export type ListStaffParams = {

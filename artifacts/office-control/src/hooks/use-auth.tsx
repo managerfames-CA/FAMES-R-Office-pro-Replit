@@ -1,20 +1,44 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useGetCurrentUser, getGetCurrentUserQueryKey, useLogout } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
+import { useMemo } from "react";
+
+export type PermissionKey =
+  | "view_reports"
+  | "view_invoices"
+  | "manage_invoices"
+  | "manage_clients"
+  | "view_team_attendance"
+  | "view_team_work_logs";
 
 export function useAuth() {
   const { data: user, isLoading, error } = useGetCurrentUser({
     query: {
       retry: false,
-      queryKey: getGetCurrentUserQueryKey()
-    }
+      queryKey: getGetCurrentUserQueryKey(),
+    },
   });
 
+  const safeUser = error ? null : user;
+  const isAdmin = safeUser?.role === "admin";
+  const permissions = useMemo<PermissionKey[]>(() => {
+    return ((safeUser?.permissions ?? []) as PermissionKey[]) ?? [];
+  }, [safeUser]);
+
+  const can = (perm: PermissionKey) => {
+    if (!safeUser) return false;
+    if (isAdmin) return true;
+    return permissions.includes(perm);
+  };
+
   return {
-    user: error ? null : user,
+    user: safeUser,
     isLoading,
-    isAdmin: user?.role === "admin",
-    isAuthenticated: !!user && !error,
+    isAdmin,
+    isAuthenticated: !!safeUser,
+    permissions,
+    can,
+    mustChangePassword: !!safeUser?.mustChangePassword,
   };
 }
 

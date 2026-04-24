@@ -20,6 +20,7 @@ import type {
   ActivityItem,
   AttendanceEntry,
   AuthUser,
+  ChangePasswordBody,
   CheckInBody,
   CheckOutBody,
   Client,
@@ -30,6 +31,7 @@ import type {
   CreateWorkLogBody,
   DailyAttendance,
   DashboardSummary,
+  FirmProfile,
   HealthStatus,
   Invoice,
   ListAttendanceParams,
@@ -42,11 +44,13 @@ import type {
   LoginBody,
   MonthlyRevenue,
   Notification,
+  ReviewWorkLogBody,
   Staff,
   StaffPerformance,
   StatusCount,
   Task,
   UpdateClientBody,
+  UpdateFirmProfileBody,
   UpdateInvoiceBody,
   UpdateStaffBody,
   UpdateTaskBody,
@@ -377,6 +381,92 @@ export function useGetCurrentUser<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Change current user password
+ */
+export const getChangePasswordUrl = () => {
+  return `/api/auth/change-password`;
+};
+
+export const changePassword = async (
+  changePasswordBody: ChangePasswordBody,
+  options?: RequestInit,
+): Promise<AuthUser> => {
+  return customFetch<AuthUser>(getChangePasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(changePasswordBody),
+  });
+};
+
+export const getChangePasswordMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    { data: BodyType<ChangePasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  { data: BodyType<ChangePasswordBody> },
+  TContext
+> => {
+  const mutationKey = ["changePassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changePassword>>,
+    { data: BodyType<ChangePasswordBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return changePassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changePassword>>
+>;
+export type ChangePasswordMutationBody = BodyType<ChangePasswordBody>;
+export type ChangePasswordMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Change current user password
+ */
+export const useChangePassword = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    { data: BodyType<ChangePasswordBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  { data: BodyType<ChangePasswordBody> },
+  TContext
+> => {
+  return useMutation(getChangePasswordMutationOptions(options));
+};
 
 /**
  * @summary List staff members
@@ -2255,6 +2345,255 @@ export const useDeleteWorkLog = <
   return useMutation(getDeleteWorkLogMutationOptions(options));
 };
 
+/**
+ * @summary List submitted work logs awaiting review (admin)
+ */
+export const getListPendingWorkLogsUrl = () => {
+  return `/api/work-logs/pending-approvals`;
+};
+
+export const listPendingWorkLogs = async (
+  options?: RequestInit,
+): Promise<WorkLog[]> => {
+  return customFetch<WorkLog[]>(getListPendingWorkLogsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListPendingWorkLogsQueryKey = () => {
+  return [`/api/work-logs/pending-approvals`] as const;
+};
+
+export const getListPendingWorkLogsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPendingWorkLogs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingWorkLogs>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListPendingWorkLogsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listPendingWorkLogs>>
+  > = ({ signal }) => listPendingWorkLogs({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingWorkLogs>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListPendingWorkLogsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPendingWorkLogs>>
+>;
+export type ListPendingWorkLogsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List submitted work logs awaiting review (admin)
+ */
+
+export function useListPendingWorkLogs<
+  TData = Awaited<ReturnType<typeof listPendingWorkLogs>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listPendingWorkLogs>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListPendingWorkLogsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Approve a submitted work log (admin)
+ */
+export const getApproveWorkLogUrl = (id: number) => {
+  return `/api/work-logs/${id}/approve`;
+};
+
+export const approveWorkLog = async (
+  id: number,
+  reviewWorkLogBody?: ReviewWorkLogBody,
+  options?: RequestInit,
+): Promise<WorkLog> => {
+  return customFetch<WorkLog>(getApproveWorkLogUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reviewWorkLogBody),
+  });
+};
+
+export const getApproveWorkLogMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveWorkLog>>,
+    TError,
+    { id: number; data: BodyType<ReviewWorkLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof approveWorkLog>>,
+  TError,
+  { id: number; data: BodyType<ReviewWorkLogBody> },
+  TContext
+> => {
+  const mutationKey = ["approveWorkLog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof approveWorkLog>>,
+    { id: number; data: BodyType<ReviewWorkLogBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return approveWorkLog(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ApproveWorkLogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof approveWorkLog>>
+>;
+export type ApproveWorkLogMutationBody = BodyType<ReviewWorkLogBody>;
+export type ApproveWorkLogMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Approve a submitted work log (admin)
+ */
+export const useApproveWorkLog = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof approveWorkLog>>,
+    TError,
+    { id: number; data: BodyType<ReviewWorkLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof approveWorkLog>>,
+  TError,
+  { id: number; data: BodyType<ReviewWorkLogBody> },
+  TContext
+> => {
+  return useMutation(getApproveWorkLogMutationOptions(options));
+};
+
+/**
+ * @summary Reject a submitted work log (admin)
+ */
+export const getRejectWorkLogUrl = (id: number) => {
+  return `/api/work-logs/${id}/reject`;
+};
+
+export const rejectWorkLog = async (
+  id: number,
+  reviewWorkLogBody?: ReviewWorkLogBody,
+  options?: RequestInit,
+): Promise<WorkLog> => {
+  return customFetch<WorkLog>(getRejectWorkLogUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reviewWorkLogBody),
+  });
+};
+
+export const getRejectWorkLogMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectWorkLog>>,
+    TError,
+    { id: number; data: BodyType<ReviewWorkLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rejectWorkLog>>,
+  TError,
+  { id: number; data: BodyType<ReviewWorkLogBody> },
+  TContext
+> => {
+  const mutationKey = ["rejectWorkLog"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rejectWorkLog>>,
+    { id: number; data: BodyType<ReviewWorkLogBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return rejectWorkLog(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RejectWorkLogMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rejectWorkLog>>
+>;
+export type RejectWorkLogMutationBody = BodyType<ReviewWorkLogBody>;
+export type RejectWorkLogMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Reject a submitted work log (admin)
+ */
+export const useRejectWorkLog = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rejectWorkLog>>,
+    TError,
+    { id: number; data: BodyType<ReviewWorkLogBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof rejectWorkLog>>,
+  TError,
+  { id: number; data: BodyType<ReviewWorkLogBody> },
+  TContext
+> => {
+  return useMutation(getRejectWorkLogMutationOptions(options));
+};
+
 export const getListInvoicesUrl = (params?: ListInvoicesParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -3128,6 +3467,167 @@ export function useGetUpcomingTasks<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get the firm profile (branding)
+ */
+export const getGetFirmProfileUrl = () => {
+  return `/api/firm-profile`;
+};
+
+export const getFirmProfile = async (
+  options?: RequestInit,
+): Promise<FirmProfile> => {
+  return customFetch<FirmProfile>(getGetFirmProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFirmProfileQueryKey = () => {
+  return [`/api/firm-profile`] as const;
+};
+
+export const getGetFirmProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFirmProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFirmProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetFirmProfileQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getFirmProfile>>> = ({
+    signal,
+  }) => getFirmProfile({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getFirmProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetFirmProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getFirmProfile>>
+>;
+export type GetFirmProfileQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get the firm profile (branding)
+ */
+
+export function useGetFirmProfile<
+  TData = Awaited<ReturnType<typeof getFirmProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFirmProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetFirmProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update firm profile (admin only)
+ */
+export const getUpdateFirmProfileUrl = () => {
+  return `/api/firm-profile`;
+};
+
+export const updateFirmProfile = async (
+  updateFirmProfileBody: UpdateFirmProfileBody,
+  options?: RequestInit,
+): Promise<FirmProfile> => {
+  return customFetch<FirmProfile>(getUpdateFirmProfileUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateFirmProfileBody),
+  });
+};
+
+export const getUpdateFirmProfileMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFirmProfile>>,
+    TError,
+    { data: BodyType<UpdateFirmProfileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateFirmProfile>>,
+  TError,
+  { data: BodyType<UpdateFirmProfileBody> },
+  TContext
+> => {
+  const mutationKey = ["updateFirmProfile"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateFirmProfile>>,
+    { data: BodyType<UpdateFirmProfileBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateFirmProfile(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateFirmProfileMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateFirmProfile>>
+>;
+export type UpdateFirmProfileMutationBody = BodyType<UpdateFirmProfileBody>;
+export type UpdateFirmProfileMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update firm profile (admin only)
+ */
+export const useUpdateFirmProfile = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateFirmProfile>>,
+    TError,
+    { data: BodyType<UpdateFirmProfileBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateFirmProfile>>,
+  TError,
+  { data: BodyType<UpdateFirmProfileBody> },
+  TContext
+> => {
+  return useMutation(getUpdateFirmProfileMutationOptions(options));
+};
 
 /**
  * @summary Tasks grouped by status

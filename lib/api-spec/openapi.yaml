@@ -19,6 +19,7 @@ tags:
   - name: notifications
   - name: dashboard
   - name: reports
+  - name: firm-profile
 paths:
   /healthz:
     get:
@@ -68,6 +69,24 @@ paths:
       responses:
         "200":
           description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change current user password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordBody"
+      responses:
+        "200":
+          description: Password changed
           content:
             application/json:
               schema:
@@ -474,6 +493,66 @@ paths:
         "204":
           description: Deleted
 
+  /work-logs/pending-approvals:
+    get:
+      operationId: listPendingWorkLogs
+      tags: [work-logs]
+      summary: List submitted work logs awaiting review (admin)
+      responses:
+        "200":
+          description: Pending work logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/WorkLog" }
+  /work-logs/{id}/approve:
+    post:
+      operationId: approveWorkLog
+      tags: [work-logs]
+      summary: Approve a submitted work log (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewWorkLogBody"
+      responses:
+        "200":
+          description: Approved work log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkLog"
+  /work-logs/{id}/reject:
+    post:
+      operationId: rejectWorkLog
+      tags: [work-logs]
+      summary: Reject a submitted work log (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewWorkLogBody"
+      responses:
+        "200":
+          description: Rejected work log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkLog"
+
   # ---------- Invoices ----------
   /invoices:
     get:
@@ -635,6 +714,37 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/Task" }
 
+  # ---------- Firm Profile ----------
+  /firm-profile:
+    get:
+      operationId: getFirmProfile
+      tags: [firm-profile]
+      summary: Get the firm profile (branding)
+      responses:
+        "200":
+          description: Firm profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirmProfile"
+    patch:
+      operationId: updateFirmProfile
+      tags: [firm-profile]
+      summary: Update firm profile (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateFirmProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirmProfile"
+
   # ---------- Reports ----------
   /reports/task-status:
     get:
@@ -704,9 +814,19 @@ components:
         email: { type: string, format: email }
         password: { type: string }
 
+    PermissionKey:
+      type: string
+      enum:
+        - view_reports
+        - view_invoices
+        - manage_invoices
+        - manage_clients
+        - view_team_attendance
+        - view_team_work_logs
+
     AuthUser:
       type: object
-      required: [id, email, name, role]
+      required: [id, email, name, role, permissions, mustChangePassword]
       properties:
         id: { type: integer }
         email: { type: string }
@@ -718,10 +838,14 @@ components:
         phone: { type: string, nullable: true }
         department: { type: string, nullable: true }
         avatarUrl: { type: string, nullable: true }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/PermissionKey" }
+        mustChangePassword: { type: boolean }
 
     Staff:
       type: object
-      required: [id, email, name, role, status, createdAt]
+      required: [id, email, name, role, status, createdAt, permissions, mustChangePassword]
       properties:
         id: { type: integer }
         email: { type: string }
@@ -736,6 +860,10 @@ components:
         phone: { type: string, nullable: true }
         department: { type: string, nullable: true }
         avatarUrl: { type: string, nullable: true }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/PermissionKey" }
+        mustChangePassword: { type: boolean }
         joinedAt: { type: string, nullable: true, format: date }
         createdAt: { type: string, format: date-time }
 
@@ -753,6 +881,10 @@ components:
         phone: { type: string, nullable: true }
         department: { type: string, nullable: true }
         joinedAt: { type: string, nullable: true, format: date }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/PermissionKey" }
+        mustChangePassword: { type: boolean }
 
     UpdateStaffBody:
       type: object
@@ -768,6 +900,17 @@ components:
         phone: { type: string, nullable: true }
         department: { type: string, nullable: true }
         password: { type: string, minLength: 6, nullable: true }
+        permissions:
+          type: array
+          items: { $ref: "#/components/schemas/PermissionKey" }
+        mustChangePassword: { type: boolean }
+
+    ChangePasswordBody:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword: { type: string, minLength: 6 }
+        newPassword: { type: string, minLength: 6 }
 
     Client:
       type: object
@@ -894,9 +1037,13 @@ components:
       properties:
         notes: { type: string, nullable: true }
 
+    ApprovalStatus:
+      type: string
+      enum: [draft, submitted, approved, rejected]
+
     WorkLog:
       type: object
-      required: [id, staffId, staffName, date, summary, createdAt]
+      required: [id, staffId, staffName, date, summary, createdAt, approvalStatus]
       properties:
         id: { type: integer }
         staffId: { type: integer }
@@ -909,6 +1056,11 @@ components:
         status:
           type: string
           enum: [in_progress, blocked, completed]
+        approvalStatus: { $ref: "#/components/schemas/ApprovalStatus" }
+        reviewNotes: { type: string, nullable: true }
+        reviewedBy: { type: integer, nullable: true }
+        reviewerName: { type: string, nullable: true }
+        reviewedAt: { type: string, nullable: true, format: date-time }
         createdAt: { type: string, format: date-time }
 
     CreateWorkLogBody:
@@ -922,6 +1074,7 @@ components:
         status:
           type: string
           enum: [in_progress, blocked, completed]
+        submitForReview: { type: boolean }
 
     UpdateWorkLogBody:
       type: object
@@ -933,6 +1086,12 @@ components:
         status:
           type: string
           enum: [in_progress, blocked, completed]
+        submitForReview: { type: boolean }
+
+    ReviewWorkLogBody:
+      type: object
+      properties:
+        notes: { type: string, nullable: true }
 
     InvoiceItem:
       type: object
@@ -1080,3 +1239,25 @@ components:
         present: { type: integer }
         absent: { type: integer }
         late: { type: integer }
+
+    FirmProfile:
+      type: object
+      required: [updatedAt]
+      properties:
+        name: { type: string, nullable: true }
+        tagline: { type: string, nullable: true }
+        logoUrl: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        updatedAt: { type: string, format: date-time }
+
+    UpdateFirmProfileBody:
+      type: object
+      properties:
+        name: { type: string, nullable: true, maxLength: 255 }
+        tagline: { type: string, nullable: true, maxLength: 255 }
+        logoUrl: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        phone: { type: string, nullable: true, maxLength: 64 }
+        email: { type: string, nullable: true, maxLength: 255 }

@@ -5,6 +5,7 @@
  * Office management control system API
  * OpenAPI spec version: 0.1.0
  */
+import type { ApprovalStatus } from "./approvalStatus";
 import type { WorkLogStatus } from "./workLogStatus";
 
 export interface WorkLog {
@@ -17,5 +18,10 @@ export interface WorkLog {
   summary: string;
   hours?: number | null;
   status?: WorkLogStatus;
+  approvalStatus: ApprovalStatus;
+  reviewNotes?: string | null;
+  reviewedBy?: number | null;
+  reviewerName?: string | null;
+  reviewedAt?: Date | null;
   createdAt: Date;
 }

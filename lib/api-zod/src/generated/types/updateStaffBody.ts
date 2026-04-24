@@ -5,6 +5,7 @@
  * Office management control system API
  * OpenAPI spec version: 0.1.0
  */
+import type { PermissionKey } from "./permissionKey";
 import type { UpdateStaffBodyRole } from "./updateStaffBodyRole";
 import type { UpdateStaffBodyStatus } from "./updateStaffBodyStatus";
 
@@ -17,4 +18,6 @@ export interface UpdateStaffBody {
   department?: string | null;
   /** @minLength 6 */
   password?: string | null;
+  permissions?: PermissionKey[];
+  mustChangePassword?: boolean;
 }

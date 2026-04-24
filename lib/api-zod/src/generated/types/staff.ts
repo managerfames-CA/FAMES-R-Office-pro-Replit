@@ -5,6 +5,7 @@
  * Office management control system API
  * OpenAPI spec version: 0.1.0
  */
+import type { PermissionKey } from "./permissionKey";
 import type { StaffRole } from "./staffRole";
 import type { StaffStatus } from "./staffStatus";
 
@@ -18,6 +19,8 @@ export interface Staff {
   phone?: string | null;
   department?: string | null;
   avatarUrl?: string | null;
+  permissions: PermissionKey[];
+  mustChangePassword: boolean;
   joinedAt?: Date | null;
   createdAt: Date;
 }

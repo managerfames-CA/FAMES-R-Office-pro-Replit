@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AuthUserRole } from "./authUserRole";
+import type { PermissionKey } from "./permissionKey";
 
 export interface AuthUser {
   id: number;
@@ -16,4 +17,6 @@ export interface AuthUser {
   phone?: string | null;
   department?: string | null;
   avatarUrl?: string | null;
+  permissions: PermissionKey[];
+  mustChangePassword: boolean;
 }

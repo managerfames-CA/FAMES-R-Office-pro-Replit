@@ -1,13 +1,14 @@
 import { Router, type IRouter, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
-import { LoginBody } from "@workspace/api-zod";
+import { LoginBody, ChangePasswordBody } from "@workspace/api-zod";
 import {
   type AuthedRequest,
   attachUser,
   clearSessionCookie,
   createSession,
   destroySession,
+  hashPassword,
   requireAuth,
   setSessionCookie,
   verifyPassword,
@@ -59,5 +60,35 @@ router.post("/auth/logout", async (req: AuthedRequest, res: Response) => {
 router.get("/auth/me", requireAuth, (req: AuthedRequest, res: Response) => {
   res.json(serializeAuthUser(req.user!));
 });
+
+router.post(
+  "/auth/change-password",
+  requireAuth,
+  async (req: AuthedRequest, res: Response) => {
+    const parsed = ChangePasswordBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid input" });
+      return;
+    }
+    const { currentPassword, newPassword } = parsed.data;
+    if (!verifyPassword(currentPassword, req.user!.passwordHash)) {
+      res.status(401).json({ error: "Current password is incorrect" });
+      return;
+    }
+    if (currentPassword === newPassword) {
+      res.status(400).json({ error: "New password must be different" });
+      return;
+    }
+    const updated = await db
+      .update(usersTable)
+      .set({
+        passwordHash: hashPassword(newPassword),
+        mustChangePassword: false,
+      })
+      .where(eq(usersTable.id, req.user!.id))
+      .returning();
+    res.json(serializeAuthUser(updated[0]!));
+  },
+);
 
 export default router;

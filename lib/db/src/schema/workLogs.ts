@@ -8,6 +8,10 @@ export const workLogsTable = pgTable("work_logs", {
   summary: text("summary").notNull(),
   hours: numeric("hours", { precision: 6, scale: 2 }),
   status: varchar("status", { length: 32 }).notNull().default("in_progress"),
+  approvalStatus: varchar("approval_status", { length: 32 }).notNull().default("draft"),
+  reviewNotes: text("review_notes"),
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 

@@ -10,6 +10,7 @@ import invoicesRouter from "./invoices";
 import notificationsRouter from "./notifications";
 import dashboardRouter from "./dashboard";
 import reportsRouter from "./reports";
+import firmProfileRouter from "./firmProfile";
 import { attachUser } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -26,5 +27,6 @@ router.use(invoicesRouter);
 router.use(notificationsRouter);
 router.use(dashboardRouter);
 router.use(reportsRouter);
+router.use(firmProfileRouter);
 
 export default router;

@@ -14,4 +14,5 @@ export interface CreateWorkLogBody {
   summary: string;
   hours?: number | null;
   status: CreateWorkLogBodyStatus;
+  submitForReview?: boolean;
 }
