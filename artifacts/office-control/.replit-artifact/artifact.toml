@@ -15,11 +15,11 @@ paths = [ "/" ]
 localPort = 23917
 
 [services.development]
-run = "pnpm --filter @workspace/office-control run dev"
+run = "npm run dev"
 
 [services.production]
-build = [ "pnpm", "--filter", "@workspace/office-control", "run", "build" ]
-publicDir = "artifacts/office-control/dist/public"
+build = [ "npm", "run", "build" ]
+publicDir = "dist"
 serve = "static"
 
 [[services.production.rewrites]]
