@@ -349,13 +349,6 @@ export async function customFetch<T = unknown>(
     headers.set("accept", DEFAULT_JSON_ACCEPT);
   }
 
-  // B Bot control actions use an application control token stored only in
-  // this browser. Treat it as sensitive and use HTTPS. Bybit API credentials remain backend-only.
-  if (typeof window !== "undefined" && !headers.has("x-admin-token")) {
-    const controlToken = window.localStorage.getItem("bbot-control-token");
-    if (controlToken) headers.set("x-admin-token", controlToken);
-  }
-
   // Attach bearer token when an auth getter is configured and no
   // Authorization header has been explicitly provided.
   if (_authTokenGetter && !headers.has("authorization")) {

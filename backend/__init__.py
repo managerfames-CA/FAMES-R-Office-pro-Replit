@@ -1,1 +1,0 @@
-"""B Bot backend package."""

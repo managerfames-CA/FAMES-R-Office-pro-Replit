@@ -1,15 +1,5 @@
-# Local caches and generated runtime files
+# The format of this file is identical to `.dockerignore`.
+# It is used to reduce the size of deployed images to make the process of publishing faster.
+
+# No need to store the pnpm store twice.
 .local
-node_modules
-**/node_modules
-.pytest_cache
-**/.pytest_cache
-__pycache__
-**/__pycache__
-*.pyc
-.env
-backend/.env
-data/*.db
-*.sqlite
-*.sqlite3
-*.zip
