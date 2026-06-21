@@ -1,0 +1,6 @@
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 typecheck
+> tsc -b --pretty false
+
+
+ELAPSED=0:10.94 MAXRSS_KB=503028

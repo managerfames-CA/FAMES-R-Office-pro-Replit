@@ -1,0 +1,44 @@
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { services } from '../services';
+import { useAppContext } from '../components/AppContext';
+import { useAsyncData } from '../hooks/useAsyncData';
+import { emptyContact } from '../constants/defaults';
+import type { ClientContactInput } from '../services/ClientContactService';
+import { EmptyState, ErrorState, Field, ListedBadge, LoadingState, PageHeader, StatusBadge, ValidationSummary } from '../components/ui';
+import { formatDateTime } from '../utils/dates';
+import { ValidationError } from '../utils/errors';
+import { Phase5ClientSummary } from '../features/phase5/Phase5Pages';
+
+export function ClientProfilePage() {
+  const { id = '' } = useParams();
+  const { revision, notifyDataChanged, showToast } = useAppContext();
+  const [tab, setTab] = useState<'overview' | 'contacts' | 'practice' | 'activity'>('overview');
+  const [contact, setContact] = useState<ClientContactInput>({ ...emptyContact, clientId: id });
+  const [contactEditId, setContactEditId] = useState('');
+  const [contactErrors, setContactErrors] = useState<string[]>([]);
+  const data = useAsyncData(async () => {
+    const client = await services.clients.get(id);
+    if (!client) throw new Error('Client not found.');
+    return { client, contacts: await services.clientContacts.forClient(id, true), activity: await services.activity.forEntity('Client', id), staff: await services.staff.list(true), industries: await services.industryMaster.list(true), categories: await services.categoryMaster.list(true) };
+  }, [id, revision]);
+  async function saveContact(event: React.FormEvent) {
+    event.preventDefault(); setContactErrors([]);
+    try { await services.clientContacts.save(contact, services.settings.get().operatorName, contactEditId || undefined); setContact({ ...emptyContact, clientId: id }); setContactEditId(''); notifyDataChanged(); showToast(contactEditId ? 'Contact updated.' : 'Contact created.'); }
+    catch (error) { setContactErrors(error instanceof ValidationError ? error.details ?? [error.message] : [error instanceof Error ? error.message : 'Unable to save contact.']); }
+  }
+  if (data.loading) return <LoadingState />;
+  if (data.error || !data.data) return <ErrorState message={data.error || 'Client not found.'} onRetry={data.reload} />;
+  const { client } = data.data;
+  const contactsReadOnly = client.isDeleted || ['Inactive', 'Rejected'].includes(client.status);
+  const staffName = (staffId: string) => data.data?.staff.find(item => item.id === staffId)?.fullName ?? '—';
+  return <>
+    <PageHeader title={client.legalName} description={`${client.clientCode}${client.tradeName ? ` · ${client.tradeName}` : ''}`} actions={<><Link className="button secondary" to="/clients">Back</Link><Link className="button primary" to={`/clients/${client.id}/edit`}>Edit Client</Link></>} />
+    <div className="profile-strip"><StatusBadge value={client.isDeleted ? 'Archived' : client.status} />{client.isListedPie && <ListedBadge />}<StatusBadge value={`${client.riskRating} Risk`} /></div>
+    <div className="tabs"><button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>Overview</button><button className={tab === 'contacts' ? 'active' : ''} onClick={() => setTab('contacts')}>Contacts</button><button className={tab === 'practice' ? 'active' : ''} onClick={() => setTab('practice')}>Practice Management</button><button className={tab === 'activity' ? 'active' : ''} onClick={() => setTab('activity')}>Activity History</button></div>
+    {tab === 'overview' && <section className="dashboard-grid"><article className="panel"><h2>Client details</h2><dl className="detail-grid"><dt>Entity Type</dt><dd>{client.entityType || '—'}</dd><dt>Industry</dt><dd>{data.data.industries.find(item => item.id === client.industryId)?.name ?? '—'}</dd><dt>Category</dt><dd>{data.data.categories.find(item => item.id === client.clientCategoryId)?.name ?? '—'}</dd><dt>Financial Year End</dt><dd>{client.financialYearEnd || '—'}</dd><dt>TIN</dt><dd>{client.tin || '—'}</dd><dt>BIN</dt><dd>{client.bin || '—'}</dd><dt>Registration</dt><dd>{client.registrationNumber || '—'}</dd></dl></article><article className="panel"><h2>Responsibility</h2><dl className="detail-grid"><dt>Partner</dt><dd>{staffName(client.responsiblePartnerId)}</dd><dt>Manager</dt><dd>{staffName(client.responsibleManagerId)}</dd><dt>Phone</dt><dd>{client.primaryPhone || '—'}</dd><dt>Email</dt><dd>{client.primaryEmail || '—'}</dd><dt>Website</dt><dd>{client.website || '—'}</dd></dl></article><article className="panel full"><h2>Addresses and notes</h2><dl className="detail-grid"><dt>Registered Address</dt><dd>{client.registeredAddress || '—'}</dd><dt>Business Address</dt><dd>{client.businessAddress || '—'}</dd><dt>Notes</dt><dd>{client.notes || '—'}</dd></dl></article></section>}
+    {tab === 'contacts' && <section className="split-layout"><article className="panel"><h2>Client Contacts</h2>{data.data.contacts.length ? <div className="list-stack">{data.data.contacts.map(item => <div className="list-row" key={item.id}><div><strong>{item.name} {item.isPrimary && <span className="badge listed">Primary</span>}</strong><span>{item.designation || 'No designation'} · {item.email || item.phone || 'No contact detail'}</span></div><div className="row-actions"><StatusBadge value={item.isActive ? 'Active' : 'Inactive'} />{!contactsReadOnly && <button className="button small" onClick={() => { setContactEditId(item.id); setContact({ clientId: item.clientId, name: item.name, designation: item.designation, department: item.department, email: item.email, phone: item.phone, communicationPreference: item.communicationPreference, isPrimary: item.isPrimary, isActive: item.isActive, status: item.status, notes: item.notes }); }}>Edit</button>}</div></div>)}</div> : <EmptyState title="No contacts" description="Add the first contact using the form." />}</article>{contactsReadOnly ? <article className="panel read-only-banner"><strong>Contacts are read-only</strong><span>Historical contacts remain visible because this client is archived, inactive or rejected.</span></article> : <form className="panel" onSubmit={saveContact}><h2>{contactEditId ? 'Edit Contact' : 'Add Contact'}</h2><ValidationSummary errors={contactErrors} /><div className="form-grid single"><Field label="Name" required><input value={contact.name} onChange={event => setContact({ ...contact, name: event.target.value })} /></Field><Field label="Designation"><input value={contact.designation} onChange={event => setContact({ ...contact, designation: event.target.value })} /></Field><Field label="Department"><input value={contact.department} onChange={event => setContact({ ...contact, department: event.target.value })} /></Field><Field label="Email"><input type="email" value={contact.email} onChange={event => setContact({ ...contact, email: event.target.value })} /></Field><Field label="Phone"><input value={contact.phone} onChange={event => setContact({ ...contact, phone: event.target.value })} /></Field><Field label="Communication Preference"><select value={contact.communicationPreference} onChange={event => setContact({ ...contact, communicationPreference: event.target.value as ClientContactInput['communicationPreference'] })}><option>Email</option><option>Phone</option><option>Any</option></select></Field><label className="checkbox-field"><input type="checkbox" checked={contact.isPrimary} onChange={event => setContact({ ...contact, isPrimary: event.target.checked })} /> Primary contact</label><label className="checkbox-field"><input type="checkbox" checked={contact.isActive} onChange={event => setContact({ ...contact, isActive: event.target.checked })} /> Active</label><Field label="Notes"><textarea value={contact.notes} onChange={event => setContact({ ...contact, notes: event.target.value })} /></Field></div><div className="form-actions">{contactEditId && <button type="button" className="button secondary" onClick={() => { setContactEditId(''); setContact({ ...emptyContact, clientId: id }); setContactErrors([]); }}>Cancel</button>}<button className="button primary">{contactEditId ? 'Update Contact' : 'Add Contact'}</button></div></form>}</section>}
+    {tab === 'practice' && <Phase5ClientSummary clientId={id} />}
+    {tab === 'activity' && <section className="panel"><h2>Client Activity History</h2>{data.data.activity.length ? <div className="timeline">{data.data.activity.map(item => <div key={item.id}><strong>{item.action}</strong><span>{item.changedFieldSummary}</span><small>{formatDateTime(item.occurredAt)} · {item.operatorName}{item.reason ? ` · ${item.reason}` : ''}</small></div>)}</div> : <EmptyState title="No activity" description="Activity records will appear after client actions." />}</section>}
+  </>;
+}

@@ -1,0 +1,10 @@
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 verify:production
+> node scripts/verify-production.mjs
+
+FAMES & R Office Work listening on http://0.0.0.0:43127
+
+Production verification PASS: health, API health, root HTML, built asset, route fallback, 404, 405, HEAD, and 0.0.0.0 binding.
+SIGTERM received; closing server.
+
+ELAPSED=0:03.60 MAXRSS_KB=152732

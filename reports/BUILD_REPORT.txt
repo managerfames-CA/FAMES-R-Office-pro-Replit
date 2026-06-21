@@ -1,0 +1,8 @@
+AUDIT FIRM MANAGEMENT APP — FINAL PRODUCTION BUILD
+Command: npm run build
+Result: PASS
+Vite: 8.0.16
+Modules transformed: 111
+JavaScript: 829.23 kB (gzip 189.92 kB)
+CSS: 21.84 kB (gzip 5.52 kB)
+Note: non-blocking >500 kB chunk warning remains.

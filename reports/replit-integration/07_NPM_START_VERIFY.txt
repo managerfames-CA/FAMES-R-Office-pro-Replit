@@ -1,0 +1,19 @@
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 start
+> node server.mjs
+
+FAMES & R Office Work listening on http://0.0.0.0:43219
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Content-Length: 171
+Cache-Control: no-store
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Date: Sun, 21 Jun 2026 15:42:52 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"status":"ok","service":"FAMES & R Office Work","version":"7.1.0-replit","persistence":"browser-localStorage","databaseConfigured":false,"authenticationConfigured":false}
+NPM START VERIFY PASS: npm run start honored dynamic PORT and 0.0.0.0 binding.

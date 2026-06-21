@@ -1,35 +1,20 @@
 modules = ["nodejs-24"]
+run = "npm run dev"
+
+[env]
+PORT = "3000"
 
 [deployment]
-router = "application"
+build = "npm ci && npm run build"
+run = "npm run start"
 deploymentTarget = "autoscale"
 
-[deployment.postBuild]
-args = ["pnpm", "store", "prune"]
-env = { "CI" = "true" }
-
 [workflows]
-runButton = "Project"
-
-[agent]
-stack = "PNPM_WORKSPACE"
-expertMode = true
-
-[postMerge]
-path = "scripts/post-merge.sh"
-timeoutMs = 20000
+runButton = "Run application"
 
 [nix]
 channel = "stable-25_05"
 
 [[ports]]
-localPort = 8080
-externalPort = 8080
-
-[[ports]]
-localPort = 8081
-externalPort = 8081
-
-[[ports]]
-localPort = 23917
+localPort = 3000
 externalPort = 80

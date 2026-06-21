@@ -1,0 +1,30 @@
+
+> audit-firm-management-phase6@7.0.0 test:run
+> node scripts/run-tests.mjs
+
+
+===== React component interaction and route checks =====
+
+ RUN  v4.1.9 /mnt/data/audit-firm-management-phase6-work/audit-firm-management-phase5
+
+··············································································
+
+ Test Files  5 passed (5)
+      Tests  78 passed (78)
+   Start at  16:15:50
+   Duration  28.57s (transform 4.56s, setup 1.07s, import 6.75s, tests 9.96s, environment 8.82s)
+
+
+===== Unit, service integration, and static architecture checks =====
+
+ RUN  v4.1.9 /mnt/data/audit-firm-management-phase6-work/audit-firm-management-phase5
+
+·········································································································································································································································································································
+
+ Test Files  9 passed (9)
+      Tests  297 passed (297)
+   Start at  16:16:20
+   Duration  16.42s (transform 4.03s, setup 1.75s, import 4.98s, tests 929ms, environment 5.24s)
+
+
+All 375 tests passed across 14 classified test files.

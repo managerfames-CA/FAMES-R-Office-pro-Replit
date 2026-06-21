@@ -1,0 +1,33 @@
+SOURCE INTEGRITY
+- Original final application source tree compared with integrated source tree: IDENTICAL.
+- `diff -qr original/src integrated/src`: no differences.
+- Approved application source files: 111.
+- Classified test files: 15.
+- Application routes: 34 child routes under the approved shell.
+- Namespaced localStorage keys: 55.
+
+INTENDED DEPLOYMENT-ONLY CHANGES
+Changed:
+- .gitignore
+- package.json
+- package-lock.json
+- vite.config.ts
+- scripts/run-tests.mjs
+
+Added:
+- .replit
+- .replitignore
+- .env.example
+- server.mjs
+- scripts/verify-production.mjs
+- INTEGRATION_AUDIT_REPORT.md
+- TEST_AND_BUILD_REPORT.md
+- REPLIT_DEPLOYMENT_GUIDE.md
+- REQUIRED_REPLIT_SECRETS.md
+- reports/replit-integration/*
+
+SECURITY CHECK
+- No old Replit UI, API, authentication code, database code, migrations, demo accounts, or demo credentials were copied.
+- No .env file is included.
+- No database password, API key, session secret, admin credential, private key, or private URL is hardcoded.
+- The health response explicitly discloses that database and authentication are not configured.

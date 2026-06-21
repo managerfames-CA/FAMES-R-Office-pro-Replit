@@ -1,0 +1,20 @@
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 dev
+> vite
+
+
+  [32m[1mVITE[22m v8.0.16[39m  [2mready in [0m[1m464[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://172.26.36.38:[1m3000[22m/[39m
+HTTP/1.1 200 OK
+Vary: Origin
+Content-Type: text/html
+Cache-Control: no-cache
+Etag: W/"39f-S12D9PQRkHxpPPbEpDBnl41Zu5Y"
+Date: Sun, 21 Jun 2026 15:42:42 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 927
+
+DEV SERVER VERIFY PASS: Vite bound to configured Replit port and served index.html.

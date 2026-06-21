@@ -1,0 +1,9 @@
+
+added 122 packages, and audited 123 packages in 5s
+
+28 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+
+ELAPSED=0:04.75 MAXRSS_KB=381212

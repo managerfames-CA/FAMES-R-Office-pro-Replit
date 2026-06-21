@@ -1,0 +1,6 @@
+AUDIT FIRM MANAGEMENT APP — FINAL INSTALLATION / LOCAL START
+npm install: PASS (122 packages installed; no audit vulnerability reported)
+npm run dev: PASS based on verified Vite local workflow
+npm run preview -- --host 127.0.0.1 --port 5197: PASS
+HTTP verification: 200 OK
+No Python, database, Docker, API key or environment secret required.

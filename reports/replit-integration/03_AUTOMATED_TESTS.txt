@@ -1,0 +1,32 @@
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 test:run
+> node scripts/run-tests.mjs
+
+
+===== React component interaction and route checks =====
+
+===== Unit, service integration, and static architecture checks =====
+
+ RUN  v4.1.9 /mnt/data/replit_integration_work/stage/FAMES-R-Office-Work-Replit-Ready-Final
+
+
+ RUN  v4.1.9 /mnt/data/replit_integration_work/stage/FAMES-R-Office-Work-Replit-Ready-Final
+
+···································································································································································································································································································································································
+
+ Test Files  10 passed (10)
+      Tests  301 passed (301)
+   Start at  15:41:11
+   Duration  20.12s (transform 4.64s, setup 2.23s, import 5.71s, tests 915ms, environment 7.35s)
+
+························
+
+ Test Files  5 passed (5)
+      Tests  78 passed (78)
+   Start at  15:41:11
+   Duration  29.50s (transform 5.41s, setup 961ms, import 7.54s, tests 9.83s, environment 9.17s)
+
+
+All 379 tests passed across 15 classified test files.
+
+ELAPSED=0:30.92 MAXRSS_KB=695736

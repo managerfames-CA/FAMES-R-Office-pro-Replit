@@ -1,0 +1,32 @@
+=== CLEAN CANDIDATE AUTOMATED TESTS ===
+UTC 2026-06-21T15:45:37Z
+
+> fames-r-office-work-replit-ready@7.1.0-replit.1 test:run
+> node scripts/run-tests.mjs
+
+
+===== React component interaction and route checks =====
+
+===== Unit, service integration, and static architecture checks =====
+
+ RUN  v4.1.9 /mnt/data/replit_integration_work/verify/candidate
+
+
+ RUN  v4.1.9 /mnt/data/replit_integration_work/verify/candidate
+
+·····································································································································································································································································································································································
+
+ Test Files  10 passed (10)
+      Tests  301 passed (301)
+   Start at  15:45:38
+   Duration  20.15s (transform 4.61s, setup 2.08s, import 5.66s, tests 958ms, environment 7.39s)
+
+······················
+
+ Test Files  5 passed (5)
+      Tests  78 passed (78)
+   Start at  15:45:38
+   Duration  29.04s (transform 4.46s, setup 986ms, import 6.68s, tests 10.12s, environment 9.15s)
+
+
+All 379 tests passed across 15 classified test files.

@@ -1,0 +1,14 @@
+import { Link, useParams } from 'react-router-dom';
+import { services } from '../services';
+import { useAppContext } from '../components/AppContext';
+import { useAsyncData } from '../hooks/useAsyncData';
+import { ErrorState, LoadingState, PageHeader, StatusBadge } from '../components/ui';
+import { formatDate } from '../utils/dates';
+
+export function TaskDetailPage() {
+  const { id = '' } = useParams(); const { revision } = useAppContext();
+  const data = useAsyncData(async () => { const task = await services.tasks.get(id); if (!task) throw new Error('Task not found.'); const [clients, engagements, staff] = await Promise.all([services.clients.list(true), services.engagements.list(true), services.staff.list(true)]); return { task, clients, engagements, staff }; }, [id, revision]);
+  if (data.loading) return <LoadingState />; if (data.error || !data.data) return <ErrorState message={data.error || 'Task not found.'} />;
+  const { task } = data.data; const linkedEngagement = data.data.engagements.find(item => item.id === task.engagementId); const readOnly = Boolean(linkedEngagement && ['Locked', 'Closed'].includes(linkedEngagement.status)); const staffName = (staffId: string) => data.data?.staff.find(item => item.id === staffId)?.fullName ?? '—';
+  return <><PageHeader title={task.title} description={`${task.taskType} task`} actions={<><Link className="button secondary" to="/tasks">Back</Link>{!readOnly && <Link className="button primary" to={`/tasks/${id}/edit`}>Edit Task</Link>}</>} />{readOnly && <div className="read-only-banner"><strong>Read-only task</strong><span>The linked engagement is {linkedEngagement?.status}. Historical information remains visible.</span></div>}<div className="profile-strip"><StatusBadge value={services.tasks.isOverdue(task) ? 'Overdue' : task.status} /><StatusBadge value={task.priority} /></div><section className="dashboard-grid"><article className="panel"><h2>Task Details</h2><dl className="detail-grid"><dt>Client</dt><dd>{data.data.clients.find(item => item.id === task.clientId)?.legalName ?? '—'}</dd><dt>Engagement</dt><dd>{data.data.engagements.find(item => item.id === task.engagementId)?.engagementCode ?? '—'}</dd><dt>Assignee</dt><dd>{staffName(task.assigneeId)}</dd><dt>Reviewer</dt><dd>{staffName(task.reviewerId)}</dd><dt>Estimated Hours</dt><dd>{task.estimatedHours}</dd></dl></article><article className="panel"><h2>Dates</h2><dl className="detail-grid"><dt>Start</dt><dd>{formatDate(task.startDate)}</dd><dt>Due</dt><dd>{formatDate(task.dueDate)}</dd><dt>Completion</dt><dd>{formatDate(task.completionDate)}</dd></dl></article><article className="panel full"><h2>Description</h2><p>{task.description || 'No description entered.'}</p>{task.blockerReason && <div className="alert warning"><strong>Blocker</strong><span>{task.blockerReason}</span></div>}</article></section></>;
+}

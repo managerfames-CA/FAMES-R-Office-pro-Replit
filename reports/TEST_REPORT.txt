@@ -1,0 +1,7 @@
+AUDIT FIRM MANAGEMENT APP — FINAL TEST REPORT
+Result: PASS
+Component/route tests: 78 PASS
+Unit/service/static tests: 301 PASS
+Total: 379/379 PASS
+Failed: 0
+Skipped: 0

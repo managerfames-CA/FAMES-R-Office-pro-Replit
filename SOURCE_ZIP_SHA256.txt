@@ -1,0 +1,3 @@
+SOURCE ZIP: audit-firm-management-final.zip
+SHA-256: 5639948fffd841157981906aec92c43a9a7eda84cedebbc2c15f258e2d103eec
+STATUS: Original source ZIP remained unchanged during consolidated packaging.
