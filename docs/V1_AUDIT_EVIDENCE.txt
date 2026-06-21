@@ -1,0 +1,38 @@
+B Bot independent audit evidence — 21 June 2026
+
+1) SHA-256 verified:
+1462de23cbaa5185d2d816559adca2d1ffae809cf31439b4cf6d3b22e7bddb9c
+
+2) Backend tests:
+12 passed in 0.87s
+
+3) Frontend:
+npm ci: PASS
+npm run typecheck: PASS
+npm run build: PASS
+
+4) Backend runtime smoke:
+/api/health: HTTP 200
+/api/dashboard: HTTP 200
+scanner state: STOPPED
+
+5) Default write authorization test:
+POST /api/scanner/stop without X-Admin-Token: HTTP 200
+Result: default configuration bypasses write authentication.
+
+6) Active-trade uniqueness test:
+SQLite accepted two rows with symbol BTCUSDT and closed_at NULL.
+Result: ix_one_active_symbol is not unique.
+
+7) Cooldown restart test:
+SQLite returned ends_at with tzinfo=None.
+Comparing with datetime.now(timezone.utc) raised:
+TypeError: can't compare offset-naive and offset-aware datetimes
+
+8) Static integration checks:
+- BybitWebSocketService has no importer/caller.
+- OrderRecord has no insert path.
+- Execution has no insert path.
+- BybitClient.executions() has no caller.
+- BybitClient.open_orders() has no caller.
+- universe_refresh_hours has no runtime use.

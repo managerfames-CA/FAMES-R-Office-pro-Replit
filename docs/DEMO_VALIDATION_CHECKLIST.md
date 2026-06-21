@@ -1,0 +1,29 @@
+# Bybit Demo Validation Checklist
+
+- [ ] Replit dependency install completes
+- [ ] Frontend TypeScript check passes
+- [ ] Frontend production build passes
+- [ ] Demo API authentication passes
+- [ ] Health shows DEMO, real mode false and scanner STOPPED
+- [ ] App Control token protects write actions
+- [ ] Top 50 loads dynamically
+- [ ] Manual Start/Stop works
+- [ ] Long and Short signals are observed
+- [ ] Each of the five strategies independently qualifies a controlled sample
+- [ ] No duplicate signal/order is created
+- [ ] Actual weighted-average fill is stored
+- [ ] Exchange-side stop is verified
+- [ ] TP1 and TP2 are independently verified exchange-side
+- [ ] A failed verification does not create duplicate protection orders
+- [ ] TP1 full execution moves stop to breakeven
+- [ ] TP2 full execution activates runner trailing
+- [ ] Trailing stop never widens
+- [ ] Emergency reduce-only close works when stop cannot be verified
+- [ ] Four full-risk losses activate the daily lock
+- [ ] Partial and fee-only losses do not increment the full-risk counter
+- [ ] Cooldown survives backend restart
+- [ ] Reconciliation detects external/manual positions
+- [ ] Reconciliation detects missing/mismatched protection
+- [ ] PnL, fees and exit price reconcile for Long trades
+- [ ] PnL, fees and exit price reconcile for Short trades
+- [ ] 100 completed Demo trades are reviewed as part of Demo-only validation
